@@ -1,0 +1,167 @@
+<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Datactive</title></head><body>
+<header class="app-header"><div class="brand-block"><div class="brand-line"><h1>Datactive</h1><span class="brand-byline">by <a href="https://nicogaudenzi.com" target="_blank" rel="noopener noreferrer">Nico Gaudenzi</a></span></div><p>Interrogate your data</p></div><div class="header-actions">
+<button id="start-fresh" type="button" title="Clear this page's saved browser data and reload">Start fresh</button><button id="load-layout">Import Interrogation</button><button id="export-layout">Export Interrogation</button><button id="help-button" type="button" aria-haspopup="dialog" aria-controls="help-dialog">Help</button><button id="about-button" type="button" aria-haspopup="dialog" aria-controls="about-dialog">About</button><input id="layout-file" type="file" accept="application/json,.json" hidden><input id="project-source-file" type="file" accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
+</div></header>
+<nav class="workspace-nav" aria-label="Workflow">
+  <button id="show-import-workspace" type="button" class="workspace-tab active" aria-current="page">1. Import Data</button>
+  <button id="show-data-workspace" type="button" class="workspace-tab">2. Profile / Prepare</button>
+  <button id="show-annotate-workspace" type="button" class="workspace-tab">3. Annotate</button>
+  <button id="show-maps-workspace" type="button" class="workspace-tab" disabled title="Annotate at least one column with a geographic role first">4. Maps</button>
+  <button id="show-dashboard-workspace" type="button" class="workspace-tab">5. Dashboard</button>
+</nav>
+<div id="dashboard-floating-actions" class="dashboard-floating-actions" hidden><button id="add-chart" class="floating-add-chart" type="button" aria-label="Add chart" title="Add chart">+</button><button id="clear-filters-floating" class="floating-clear-filters" type="button" aria-label="Clear filters" title="Clear filters">×</button></div>
+<section id="import-workspace" class="workflow-workspace" aria-label="Import data workspace">
+  <div class="workflow-heading"><div><h2>Import data</h2><p>Choose a local CSV or Excel file, or provide a URL to a CSV resource. Your data is processed in this browser.</p></div><div id="csv-import-status" class="csv-import-status" role="status" aria-live="polite">Sample dataset loaded</div></div>
+  <div class="import-options-grid">
+    <section class="workflow-card"><div class="workflow-card-icon">↑</div><h3>Upload a CSV file</h3><p>Select a CSV file from your computer. Values are imported as-is; cleaning is not applied automatically.</p><label class="csv-import-button" for="csv-file">Choose CSV file</label><input id="csv-file" type="file" accept=".csv,text/csv" hidden></section>
+    <section class="workflow-card"><div class="workflow-card-icon">▦</div><h3>Upload an Excel workbook</h3><p>Select an .xlsx or .xls workbook. Choose a worksheet if the workbook contains multiple sheets. Cell values are imported without cleaning.</p><label class="csv-import-button" for="xlsx-file">Choose Excel file</label><input id="xlsx-file" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><div id="xlsx-sheet-controls" class="url-import-form" hidden><label for="xlsx-sheet">Worksheet</label><select id="xlsx-sheet"></select><button id="xlsx-import-sheet" class="primary-button" type="button">Import worksheet</button></div></section>
+    <section class="workflow-card"><div class="workflow-card-icon">↗</div><h3>Import from URL</h3><p>Enter a direct URL that returns CSV text. The remote server must permit browser access (CORS).</p><form id="csv-url-form" class="url-import-form"><label for="csv-url">CSV URL</label><input id="csv-url" type="url" placeholder="https://example.com/data.csv" required><button class="primary-button" type="submit">Fetch CSV</button></form></section>
+  </div>
+  <div class="import-footer"><span id="import-source-detail">Using the bundled sales example until you import another dataset.</span><button id="restore-saved-import" type="button" hidden>Restore saved dataset</button><button id="reset-to-sample" type="button" hidden>Use sample data</button></div>
+  <div class="import-note"><strong>URL import note:</strong> This supports direct CSV URLs, not pages that display a download button or require authentication. If the browser blocks the request because of CORS, download the CSV and use the file upload option instead.</div>
+</section>
+<main id="dashboard-workspace">
+<section id="filter-panel" class="filter-panel">
+  <button id="filter-panel-toggle" class="filter-panel-toggle" type="button" aria-expanded="false" aria-controls="filter-panel-body">
+    <span>Filters <span id="filter-count" class="filter-count">0</span> <span id="filtered-row-count" class="filter-row-count">30 / 30 rows</span></span>
+    <span id="filter-panel-chevron" aria-hidden="true">▼</span>
+  </button>
+  <div id="filter-panel-body" class="filter-panel-body" hidden>
+    <div class="filter-actions-row"><div id="active-filters" class="active-filters"></div>
+      <button id="clear-active-filters" class="clear-filters-button" type="button" hidden>Clear all</button>
+    </div>
+  </div>
+</section>
+
+<section id="ranges-panel" class="filter-panel ranges-panel">
+  <button id="ranges-panel-toggle" class="filter-panel-toggle" type="button" aria-expanded="false" aria-controls="ranges-panel-body">
+    <span>Ranges</span>
+    <span id="ranges-panel-chevron" aria-hidden="true">▼</span>
+  </button>
+  <div id="ranges-panel-body" class="filter-panel-body" hidden>
+    <div id="numeric-range-filters" class="numeric-range-filters"></div>
+  </div>
+</section>
+<div id="dashboard-state-notice" class="annotation-help" role="status" hidden></div>
+<div id="dashboard" class="grid-stack"></div>
+</main>
+<section id="data-workspace" class="data-workspace workflow-workspace" hidden aria-label="Profile and preparation workspace"></section>
+<section id="annotate-workspace" class="workflow-workspace" hidden aria-label="Data annotation workspace"><div class="workflow-heading"><div><h2>Annotate data</h2><p>Describe columns and correct inferred types or roles. Metadata choices affect chart field options but do not modify source values.</p></div></div><div id="annotation-editor" class="annotation-editor"></div></section>
+<section id="maps-workspace" class="workflow-workspace" hidden aria-label="Geographic mapping workspace"><div class="workflow-heading"><div><h2>Map geographic values</h2><p>Choose a map and explicitly assign distinct values from a geographic column to its regions. Assignments are saved with the data project. Use the Dashboard workspace to create a choropleth from mapped regions.</p></div></div><section id="custom-geojson-import" class="custom-geojson-import" aria-labelledby="custom-geojson-heading"><div><h3 id="custom-geojson-heading">Preview a custom GeoJSON map</h3><p>Upload polygon boundaries to validate and preview them. Add a validated map to your saved custom-map catalog and use it in a choropleth. Custom maps are session-only in this stage.</p></div><div class="custom-geojson-controls"><label>Map name<input id="custom-map-name" type="text" maxlength="80" placeholder="e.g. Sales territories"></label><label>GeoJSON file<input id="custom-geojson-file" type="file" accept=".geojson,.json,application/geo+json,application/json"></label></div><div id="custom-geojson-status" role="status" aria-live="polite" class="annotation-help">Choose a GeoJSON FeatureCollection to begin.</div><div id="custom-geojson-property-controls" class="custom-geojson-controls" hidden><label>Region ID property<select id="custom-geojson-id-property"></select></label><label>Display label property<select id="custom-geojson-label-property"></select></label></div><div id="custom-geojson-preview-summary" class="annotation-help"></div><div id="custom-geojson-preview" class="custom-geojson-preview" aria-label="Custom GeoJSON preview"></div><div class="custom-geojson-actions"><button id="custom-geojson-add-map" type="button" class="primary-button" disabled>Add to map catalog</button><span id="custom-geojson-add-status" class="annotation-help" role="status" aria-live="polite"></span></div></section><section id="custom-map-catalog" class="custom-map-catalog" aria-labelledby="custom-map-catalog-heading"><h3 id="custom-map-catalog-heading">Custom map catalog</h3><p class="annotation-help">Edit the region ID and display label properties or remove saved custom maps.</p><div id="custom-map-catalog-list"></div></section><div id="geography-editor" class="geography-editor"></div></section>
+<dialog id="chart-dialog"><form id="chart-form"><h2 id="chart-dialog-title">Add chart</h2>
+<label>Title<input id="chart-title" placeholder="Leave blank for an automatic name"></label>
+<label>Chart type<select id="chart-type"><option value="bar">Bar</option><option value="line">Line</option><option value="area">Area</option><option value="scatter">Scatter</option><option value="pie">Pie / Donut</option><option value="histogram">Histogram</option><option value="density">Density / KDE</option><option value="stackedBar">Stacked Bar</option><option value="boxPlot">Box Plot</option><option value="heatmap">Heatmap</option><option value="treemap">Treemap</option><option value="combo">Combo</option><option value="waterfall">Waterfall</option><option value="funnel">Funnel</option><option value="violinPlot">Violin Plot</option><option value="radar">Radar</option><option value="map">Choropleth Map</option><option value="table">Table</option></select></label>
+<div id="standard-chart-fields">
+<label>Dimension (X axis)<select id="chart-dimension"></select></label>
+<label>Values (Y axis) — select one or more<select id="chart-measure" multiple size="6"></select></label>
+<label>Aggregation<select id="chart-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+</div>
+<div id="pie-chart-fields" hidden>
+<label>Dimension<select id="pie-dimension"></select></label>
+<label>Value<select id="pie-measure"></select></label>
+<label>Aggregation<select id="pie-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+<label><span>Style</span><span><input id="pie-donut" type="checkbox"> Donut</span></label>
+<p class="field-help">Each slice represents the selected dimension. Choose how the selected value is aggregated within each category.</p>
+</div>
+<div id="density-chart-fields" hidden>
+<label>Value column<select id="density-column"></select></label>
+<p class="field-help">Estimates the distribution of a numeric column using a Gaussian kernel density estimate. Brush the value axis to filter the dashboard to a numeric range.</p>
+</div>
+<div id="histogram-chart-fields" hidden>
+<label>Value column<select id="histogram-column"></select></label>
+<label>Number of bins<input id="histogram-bins" type="number" min="2" max="100" step="1" value="10"></label>
+<p class="field-help">Shows the distribution of a numeric column. Brushing the X axis creates a numeric range filter.</p>
+</div>
+<div id="stacked-bar-chart-fields" hidden>
+<label>X axis<select id="stacked-primary-dimension"></select></label>
+<label>Stack by<select id="stacked-dimension"></select></label>
+<label>Value<select id="stacked-measure"></select></label>
+<label>Aggregation<select id="stacked-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+<p class="field-help">Stacks one numeric measure across a second categorical dimension. Brush the X axis to filter the primary dimension; click a segment to filter its stack category.</p>
+</div>
+<div id="heatmap-chart-fields" hidden>
+<label>X axis<select id="heatmap-x-dimension"></select></label>
+<label>Y axis<select id="heatmap-y-dimension"></select></label>
+<label>Value<select id="heatmap-measure"></select></label>
+<label>Aggregation<select id="heatmap-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+<p class="field-help">Each cell represents the selected value for an X/Y category pair. Click a cell to filter both dimensions.</p>
+</div>
+<div id="treemap-chart-fields" hidden>
+<label>Dimension<select id="treemap-dimension"></select></label>
+<label>Value<select id="treemap-measure"></select></label>
+<label>Aggregation<select id="treemap-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+<p class="field-help">Each rectangle represents one category. Area shows the aggregated value, and clicking a rectangle filters that category.</p>
+</div>
+<div id="combo-chart-fields" hidden>
+<label>Dimension (X axis)<select id="combo-dimension"></select></label>
+<div class="combo-series-row"><label>Series 1<select id="combo-measure-1"></select></label><label>Style<select id="combo-style-1"><option value="bar">Bar</option><option value="line">Line</option></select></label></div>
+<div class="combo-series-row"><label>Series 2<select id="combo-measure-2"></select></label><label>Style<select id="combo-style-2"><option value="line">Line</option><option value="bar">Bar</option></select></label></div>
+<label>Aggregation<select id="combo-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+<p class="field-help">Combines two measures on one shared Y axis. Each series can be rendered as bars or a line. Brush the X axis to filter the dimension; clicking a mark also filters its category.</p>
+</div>
+<div id="waterfall-chart-fields" hidden>
+<label>Dimension (X axis)<select id="waterfall-dimension"></select></label>
+<label>Change value<select id="waterfall-measure"></select></label>
+<label>Aggregation<select id="waterfall-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+<p class="field-help">Each category is treated as a positive or negative change from the previous total. The final bar shows the resulting total. Brush the X axis to filter categories; click a change bar to filter its category.</p>
+</div>
+<div id="funnel-chart-fields" hidden>
+<label>Stage (dimension)<select id="funnel-dimension"></select></label>
+<label>Value<select id="funnel-measure"></select></label>
+<label>Aggregation<select id="funnel-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+<p class="field-help">Stages preserve the source/category order. Width represents the aggregated value, and clicking a stage filters that category.</p>
+</div>
+<div id="violin-plot-chart-fields" hidden>
+<label>Dimension (X axis)<select id="violin-plot-dimension"></select></label>
+<label>Value column<select id="violin-plot-measure"></select></label>
+<p class="field-help">Shows the distribution of raw numeric values for each category. Wider sections indicate more observations near that value. Uses a kernel density estimate; brush the X axis to filter categories.</p>
+</div>
+<div id="box-plot-chart-fields" hidden>
+<label>Dimension (X axis)<select id="box-plot-dimension"></select></label>
+<label>Value column<select id="box-plot-measure"></select></label>
+<p class="field-help">Shows the distribution of a numeric value for each category. The box spans the first to third quartiles, the center line is the median, and points beyond 1.5 IQR are outliers. Brush the X axis to filter categories.</p>
+</div>
+<div id="map-chart-fields" hidden>
+<label>Map<select id="map-definition"></select></label>
+<label>Geographic column<select id="map-geographic-column"></select></label>
+<label>Numeric value<select id="map-measure"></select></label>
+<label>Aggregation<select id="map-aggregation"><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="count">Count</option></select></label>
+<p class="field-help">Colors each mapped region by the aggregated numeric value. Only values explicitly mapped in Maps are included. Unmapped values are reported in the chart; this starter map is schematic and currently covers Canada, Mexico, and the United States.</p>
+</div>
+<div id="table-chart-fields" hidden>
+<label>Columns — select one or more<select id="table-columns" multiple size="8"></select></label>
+<p class="field-help">Shows the filtered source data as rows and columns. No aggregation is applied.</p>
+</div>
+<div id="scatter-chart-fields" hidden>
+<label>X axis<select id="scatter-x"></select></label>
+<label>Y axis<select id="scatter-y"></select></label>
+<label>Color by (optional)<select id="scatter-color"></select></label>
+<label>Size by (optional)<select id="scatter-size"></select></label>
+<p class="field-help">Use numeric measures to control point color and size. Each source row becomes a point. No aggregation is applied.</p>
+</div>
+<div class="dialog-actions"><button type="button" id="cancel-chart">Cancel</button><button type="submit" class="primary-button" id="chart-submit">Add chart</button></div>
+</form></dialog>
+<dialog id="help-dialog" class="info-dialog" aria-labelledby="help-dialog-title">
+  <div class="info-dialog-header"><div><h2 id="help-dialog-title">Datactive Help</h2><p>Quick guides for each workspace.</p></div><button type="button" class="info-dialog-close" data-close-dialog="help-dialog" aria-label="Close help">×</button></div>
+  <div class="info-dialog-content">
+    <section class="help-topic"><h3>1. Import Data</h3><ol><li>Upload a CSV or Excel workbook, or enter a direct URL to a CSV file.</li><li>For workbooks with multiple sheets, choose the worksheet you want to import.</li><li>Imported values are kept as-is; review and clean them in Profile / Prepare.</li></ol></section>
+    <section class="help-topic"><h3>2. Profile / Prepare</h3><ol><li>Start with Column Profiles to inspect types, distributions, and example values.</li><li>Open Data-quality findings to investigate missing, inconsistent, or suspicious values.</li><li>Use Cleaning Transformations to preview and apply cleanup steps; inspect affected rows when available.</li></ol></section>
+    <section class="help-topic"><h3>3. Annotate</h3><ol><li>Select a column and add a description or correct its inferred type and role.</li><li>Use geographic roles for columns that represent places or regions.</li><li>Annotations describe how Datactive interprets a column; they do not rewrite the source values.</li></ol></section>
+    <section class="help-topic"><h3>4. Maps</h3><ol><li>Annotate a column with a geographic role to enable Maps.</li><li>Choose the map and explicitly match values in your data to its regions.</li><li>Use a mapped geographic column when creating a choropleth chart in Dashboard.</li></ol></section>
+    <section class="help-topic"><h3>5. Dashboard</h3><ol><li>Add charts and select the dimensions, measures, and aggregation appropriate to each chart.</li><li>Move and resize charts; use chart interactions and the Filters / Ranges panels to explore subsets of the data.</li><li>Use the × action to clear filters. Export Interrogation to save a project file, or Import Interrogation to load one.</li></ol></section>
+  </div>
+  <div class="info-dialog-footer"><button type="button" data-close-dialog="help-dialog">Close</button></div>
+</dialog>
+<dialog id="about-dialog" class="info-dialog about-dialog" aria-labelledby="about-dialog-title">
+  <div class="info-dialog-header"><div><h2 id="about-dialog-title">About Datactive</h2><p>Interrogate your data</p></div><button type="button" class="info-dialog-close" data-close-dialog="about-dialog" aria-label="Close about">×</button></div>
+  <div class="info-dialog-content">
+    <p>Datactive is a browser-based workspace for understanding datasets, preparing messy data, and exploring patterns through interactive visualizations. Your imported data is processed locally in your browser.</p>
+    <h3>Features</h3>
+    <ul class="feature-list"><li>Import CSV files, Excel workbooks, and CSV data from direct URLs.</li><li>Profile columns and inspect data-quality findings and row previews.</li><li>Preview and apply data-cleaning transformations.</li><li>Annotate columns with descriptions, types, roles, and geographic metadata.</li><li>Map data values to geographic regions and build choropleth charts.</li><li>Create interactive charts and tables with shared filters.</li><li>Arrange dashboard widgets and export or import an interrogation project.</li></ul>
+    <h3>Contribute</h3>
+    <p>If you find Datactive useful, you can support its development on <a href="https://buymeacoffee.com/nicogaudene" target="_blank" rel="noopener noreferrer">Buy Me a Coffee</a>.</p>
+    <p class="about-credit">Created by <a href="https://nicogaudenzi.com" target="_blank" rel="noopener noreferrer">Nico Gaudenzi</a>.</p>
+  </div>
+  <div class="info-dialog-footer"><button type="button" data-close-dialog="about-dialog">Close</button></div>
+</dialog>
+<script type="module" src="/src/main.js"></script></body></html>

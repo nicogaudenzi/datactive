@@ -1,0 +1,13 @@
+Record ID,Region,Revenue,Units,Order Date,Status,Notes
+1,North,120.5,3,2025-01-03,complete,Normal row
+2, south ,80,2,2025-01-04,Complete,Whitespace and case variant
+3,South,not reported,1,2025-01-05,pending,Mixed type in Revenue
+4,North,,4,2025-01-06,complete,Missing revenue
+5,East,45,1,2025-01-07,complete,
+6,East,45,1,2025-01-07,complete,
+7,NORTH,99999,2,2025-01-08,complete,Potential numeric outlier
+8,West,0,,2025-01-09,unknown,Missing units
+9, west,15,1,not-a-date,Complete,Invalid date-like value
+10,South,62,2,2025-01-11,pending,Another row
+11,North,18,1,2025-01-12,complete, 
+12,East,23,1,2025-01-13,complete,Extra spaces in note
