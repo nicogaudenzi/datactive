@@ -247,7 +247,10 @@ const rawTable = cachedParsedTable?.columns && cachedParsedTable?.rows
         })).table
       : importedCsv?.text
         ? sourceRegistry.loadText("csv", importedCsv.text, importedCsv.name || "local-file.csv")
-        : await sourceRegistry.load("csv", new URL("/data/sales.csv", window.location.origin).href);
+        : await sourceRegistry.load(
+  "csv",
+  new URL(`${import.meta.env.BASE_URL}data/sales.csv`, window.location.origin).href
+);
 performanceMetrics.record("source-load-and-parse", sourceLoadStartedAt, {rows: rawTable.rows.length, columns: rawTable.columns.length, cached: Boolean(cachedParsedTable)});
 // Parsing is complete, but canonical dataset construction and analysis still
 // remain. Do not leave the import UI reporting Parsing 100% during those phases.
